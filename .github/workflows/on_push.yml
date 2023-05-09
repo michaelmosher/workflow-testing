@@ -15,15 +15,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Setup"
+        id: "start"
         shell: "bash"
-        run: "echo startTime=$(date --rfc-3339=ns) >> $GITHUB_OUTPUT"
+        run: echo "time=$(date --rfc-3339=ns)" >> $GITHUB_OUTPUT
 
       - name: "No really, real work is happening here."
         shell: "bash"
         run: "sleep 30"
 
     outputs:
-      start-time: "${{ steps.Setup.outputs.startTime }}"
+      start-time: "${{ steps.start.outputs.time }}"
+
+  troubleshoot:
+    needs: [real-work]
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Does start-time exist?"
+        run: "echo start-time = ${{ needs.real-work.outputs.start-time}}"
 
   otel-export:
     needs: [otel-setup, real-work]
