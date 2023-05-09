@@ -8,6 +8,7 @@ jobs:
     uses: "./.github/workflows/otel-helper.yml"
     with:
       job-name: "OTel Setup"
+    secrets: inherit
 
   real-work:
     needs: [otel-setup]
@@ -31,3 +32,4 @@ jobs:
       job-name: "Real Work"
       start-time: "${{ needs.real-work.outputs.start-time }}"
       trace-ID: "${{ needs.otel-setup.outputs.trace-ID }}"
+    secrets: inherit

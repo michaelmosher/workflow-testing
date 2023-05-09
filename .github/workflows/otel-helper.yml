@@ -27,6 +27,12 @@ on:
         type: string
         default: ""
 
+    secrets:
+      OTEL_EXPORTER_OTLP_ENDPOINT:
+        required: true
+      OTEL_EXPORTER_OTLP_HEADERS:
+        required: true
+
     outputs:
       trace-ID:
         value: ${{ jobs.main.outputs.trace-ID }}
@@ -37,20 +43,17 @@ env:
 
 jobs:
   main:
-    name: "OTel Setup"
+    name: "OTel"
     runs-on: "ubuntu-latest"
 
     steps:
-      - name: "Setup"
-        shell: "bash"
-        run: |
-          echo "ourStartTime=$(date --rfc-3339=ns)" >> $GITHUB_ENV
-
-      - name: "Setup otel-cli"
+      - name: "Install otel-cli"
         shell: "bash"
         # According to GitHub docs, all Linux runners are x86_64.
         # ref: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
         run: |
+          echo "ourStartTime=$(date --rfc-3339=ns)" >> $GITHUB_ENV
+
           readonly debFile="otel-cli_${otelCLIVersion}_linux_amd64.deb"
           curl -LO "${otelCLIReleases}/download/v${otelCLIVersion}/$debFile"
           sudo dpkg -i $debFile
@@ -60,16 +63,14 @@ jobs:
         if: 'inputs.trace-ID == null'
         shell: "bash"
         env:
-          OTEL_EXPORTER_OTLP_ENDPOINT: "127.0.0.1:4317"
-          OTEL_EXPORTER_OTLP_HEADERS: ""
+          OTEL_EXPORTER_OTLP_ENDPOINT: "${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}"
+          OTEL_EXPORTER_OTLP_HEADERS: "${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}"
           OTEL_SERVICE_NAME: "${{ github.workflow }}"
         run: |
           otel-cli span --verbose --tp-carrier=trace-id.txt \
               --start "$ourStartTime" \
               --name "otel-helper"
 
-          cat trace-id.txt
-          tail -1 trace-id.txt >> $GITHUB_ENV
           tail -1 trace-id.txt >> $GITHUB_OUTPUT
 
       - name: "Add ${{ inputs.job-name }} spans to the trace"
@@ -77,8 +78,8 @@ jobs:
         if: 'inputs.trace-ID != null'
         shell: "bash"
         env:
-          OTEL_EXPORTER_OTLP_ENDPOINT: "127.0.0.1:4317"
-          OTEL_EXPORTER_OTLP_HEADERS: ""
+          OTEL_EXPORTER_OTLP_ENDPOINT: "${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}"
+          OTEL_EXPORTER_OTLP_HEADERS: "${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}"
           OTEL_SERVICE_NAME: "${{ github.workflow }}"
           TRACEPARENT: "${{ inputs.trace-ID }}"
 
