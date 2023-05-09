@@ -31,6 +31,10 @@ on:
       trace-ID:
         value: ${{ jobs.main.outputs.trace-ID }}
 
+env:
+  otelCLIReleases: "https://github.com/equinix-labs/otel-cli/releases"
+  otelCLIVersion: "0.2.0"
+
 jobs:
   main:
     name: "OTel Setup"
@@ -42,17 +46,14 @@ jobs:
         run: |
           echo "ourStartTime=$(date --rfc-3339=ns)" >> $GITHUB_ENV
 
-      - name: "Setup Go (so we can install otel-cli)"
-        uses: "actions/setup-go@v4"
-        with:
-          go-version: "stable"
-
       - name: "Setup otel-cli"
         shell: "bash"
+        # According to GitHub docs, all Linux runners are x86_64.
+        # ref: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
         run: |
-          go install github.com/equinix-labs/otel-cli@latest
-          eval $(go env | grep GOPATH)
-          echo PATH="$GOPATH/bin" >> $GITHUB_PATH
+          readonly debFile="otel-cli_${otelCLIVersion}_linux_amd64.deb"
+          curl -LO "${otelCLIReleases}/download/v${otelCLIVersion}/$debFile"
+          sudo dpkg -i $debFile
 
       - name: "Create a new trace"
         id: "create"
