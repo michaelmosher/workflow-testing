@@ -26,13 +26,6 @@ jobs:
     outputs:
       start-time: "${{ steps.start.outputs.time }}"
 
-  troubleshoot:
-    needs: [real-work]
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Does start-time exist?"
-        run: "echo start-time = ${{ needs.real-work.outputs.start-time}}"
-
   otel-export:
     needs: [otel-setup, real-work]
     uses: "./.github/workflows/otel-helper.yml"
