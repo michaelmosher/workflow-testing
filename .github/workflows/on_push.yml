@@ -1,0 +1,33 @@
+name: on-push
+
+on:
+  push:
+
+jobs:
+  otel-setup:
+    uses: "./.github/workflows/otel-helper.yml"
+    with:
+      job-name: "OTel Setup"
+
+  real-work:
+    needs: [otel-setup]
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Setup"
+        shell: "bash"
+        run: "echo startTime=$(date --rfc-3339=ns) >> $GITHUB_OUTPUT"
+
+      - name: "No really, real work is happening here."
+        shell: "bash"
+        run: "sleep 30"
+
+    outputs:
+      start-time: "${{ steps.Setup.outputs.startTime }}"
+
+  otel-export:
+    needs: [otel-setup, real-work]
+    uses: "./.github/workflows/otel-helper.yml"
+    with:
+      job-name: "Real Work"
+      start-time: "${{ needs.real-work.outputs.start-time }}"
+      trace-ID: "${{ needs.otel-setup.outputs.trace-ID }}"

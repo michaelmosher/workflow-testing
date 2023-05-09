@@ -1,0 +1,101 @@
+---
+name: "otel-helper"
+
+on:
+  workflow_call:
+    inputs:
+      job-name:
+        description: |
+          The name of the job to attribute the work we're reporting on.
+        required: true
+        type: string
+
+      start-time:
+        description: |
+          If a trace ID is provided, we assume a start-time is also provided for
+          the work we're reporting on. If a trace ID is not provided, this value
+          isn't used.
+        required: false
+        type: string
+        default: ""
+
+      trace-ID:
+        description: |
+          If a trace ID is provided, we will create a child span of that trace.
+          Otherwise, we will create and return a new trace ID.
+        required: false
+        type: string
+        default: ""
+
+    outputs:
+      trace-ID:
+        value: ${{ jobs.main.outputs.trace-ID }}
+
+jobs:
+  main:
+    name: "OTel Setup"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Setup"
+        shell: "bash"
+        run: |
+          echo "ourStartTime=$(date --rfc-3339=ns)" >> $GITHUB_ENV
+
+      - name: "Setup Go (so we can install otel-cli)"
+        uses: "actions/setup-go@v4"
+        with:
+          go-version: "stable"
+
+      - name: "Setup otel-cli"
+        shell: "bash"
+        run: |
+          go install github.com/equinix-labs/otel-cli@latest
+          eval $(go env | grep GOPATH)
+          echo PATH="$GOPATH/bin" >> $GITHUB_PATH
+
+      - name: "Create a new trace"
+        id: "create"
+        if: 'inputs.trace-ID == null'
+        shell: "bash"
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: "127.0.0.1:4317"
+          OTEL_EXPORTER_OTLP_HEADERS: ""
+          OTEL_SERVICE_NAME: "${{ github.workflow }}"
+        run: |
+          otel-cli span --verbose --tp-carrier=trace-id.txt \
+              --start "$ourStartTime" \
+              --name "otel-helper"
+
+          cat trace-id.txt
+          tail -1 trace-id.txt >> $GITHUB_ENV
+          tail -1 trace-id.txt >> $GITHUB_OUTPUT
+
+      - name: "Add ${{ inputs.job-name }} spans to the trace"
+        id: "add"
+        if: 'inputs.trace-ID != null'
+        shell: "bash"
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: "127.0.0.1:4317"
+          OTEL_EXPORTER_OTLP_HEADERS: ""
+          OTEL_SERVICE_NAME: "${{ github.workflow }}"
+          TRACEPARENT: "${{ inputs.trace-ID }}"
+
+        run: |
+          readonly jobName="${{ inputs.job-name }}"
+          readonly startTime="${{ inputs.start-time }}"
+          echo "jobName = $jobName"
+          echo "traceID = $TRACEPARENT"
+
+          # report our setup time
+          otel-cli span --verbose \
+              --start "$ourStartTime" \
+              --name "otel-helper"
+
+          # report real work time
+          otel-cli span --verbose \
+              --start "$startTime" \
+              --name "$jobName"
+
+    outputs:
+      trace-ID: ${{ steps.create.outputs.TRACEPARENT }}
