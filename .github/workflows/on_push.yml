@@ -4,33 +4,10 @@ on:
   push:
 
 jobs:
-  otel-setup:
-    uses: "./.github/workflows/otel-helper.yml"
-    with:
-      job-name: "OTel Setup"
-    secrets: inherit
-
-  real-work:
-    needs: [otel-setup]
-    runs-on: ubuntu-latest
+  main:
+    runs-on: "ubuntu-latest"
+    if: >
+      github.event.action == 'push'
+      && github.event.ref_name != 'main'
     steps:
-      - name: "Setup"
-        id: "start"
-        shell: "bash"
-        run: echo "time=$(date --rfc-3339=ns)" >> $GITHUB_OUTPUT
-
-      - name: "No really, real work is happening here."
-        shell: "bash"
-        run: "sleep 30"
-
-    outputs:
-      start-time: "${{ steps.start.outputs.time }}"
-
-  otel-export:
-    needs: [otel-setup, real-work]
-    uses: "./.github/workflows/otel-helper.yml"
-    with:
-      job-name: "Real Work"
-      start-time: "${{ needs.real-work.outputs.start-time }}"
-      trace-ID: "${{ needs.otel-setup.outputs.trace-ID }}"
-    secrets: inherit
+      - run: "echo this step wasn\\'t skipped"
