@@ -7,7 +7,8 @@ jobs:
   main:
     runs-on: "ubuntu-latest"
     if: >
-      github.event.action == 'push'
-      && github.event.ref_name != 'main'
+      github.ref_name != 'main'
+      && github.actor == 'michaelmosher'
+
     steps:
-      - run: "echo this step wasn\\'t skipped"
+      - run: "echo this job wasn\\'t skipped because ref_name is ${{github.ref_name}} and actor is ${{github.actor}}"
