@@ -1,8 +1,9 @@
 name: "On PR"
 
 on:
-  push:
+  pull_request:
     paths:
+      - "!**/*"
       - ".github/**"
 
 jobs:
