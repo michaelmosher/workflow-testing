@@ -1,0 +1,12 @@
+name: "On PR"
+
+on:
+  pull_request:
+    paths-ignore:
+      - ".github/**"
+
+jobs:
+  main:
+    runs-on: "ubuntu-latest"
+    steps:
+      - run: "echo 'path exclude'"
