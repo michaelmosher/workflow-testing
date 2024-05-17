@@ -14,5 +14,4 @@ jobs:
       - run: "echo this job wasn\\'t skipped because ref_name is ${{github.ref_name}} and actor is ${{github.actor}}"
 
       - run: |
-          echo "${{ github.event.push }}"
-          echo "${{ github.event.push }}" | jq
+          echo "${{ github.event.created }}"
