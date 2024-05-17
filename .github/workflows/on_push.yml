@@ -12,3 +12,7 @@ jobs:
 
     steps:
       - run: "echo this job wasn\\'t skipped because ref_name is ${{github.ref_name}} and actor is ${{github.actor}}"
+
+      - run: "echo $event | jq"
+        env:
+          event: "${{ github.event }}"
