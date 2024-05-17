@@ -7,7 +7,7 @@ jobs:
   main:
     runs-on: "ubuntu-latest"
     if: >
-      github.ref_name != 'main'
+      github.ref_name == 'main'
       && github.actor == 'michaelmosher'
 
     steps:
