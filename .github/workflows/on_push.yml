@@ -15,4 +15,4 @@ jobs:
 
       - run: "echo $event | jq"
         env:
-          event: "${{ github.event }}"
+          event: "${{ fromJSON(github.event) }}"
