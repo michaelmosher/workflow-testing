@@ -15,3 +15,17 @@ jobs:
 
       - run: |
           echo "${{ github.event.created }}"
+
+  test-variables:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v4"
+        with:
+          ref: "${{ github.ref }}"
+
+      - name: "variable-test-1"
+        uses: "./actions/variable-test-1"
+        with:
+          message: "runURL = $runURL"
+        env:
+          runURL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
