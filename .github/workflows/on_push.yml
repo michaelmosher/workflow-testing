@@ -16,6 +16,16 @@ jobs:
       - run: |
           echo "${{ github.event.created }}"
 
+  test-matrix:
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        include:
+          - realKey: "a value"
+    steps:
+      - run: "echo ${{ matrix.realKey }}"
+      - run: "echo ${{ matrix.fakeKey }}"
+
   test-variables:
     runs-on: "ubuntu-latest"
     steps:
