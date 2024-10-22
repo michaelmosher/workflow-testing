@@ -1,0 +1,27 @@
+name: on-pull-request
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  print_context:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          EVENT_CONTEXT: ${{ toJSON(github.event) }}
+        run: |
+          echo $EVENT_CONTEXT | jq
+
+      - run: |
+          echo "branch_push_time: $branch_push_time"
+          echo "pull_request_create_time: $pull_request_create_time"
+
+          if [[ $pull_request_create_time < $branch_push_time ]]; then
+            echo "branch updated after PR created"
+          else
+            echo "PR created after branch updated"
+          fi
+        env:
+          branch_push_time: "${{ github.event.pull_request.head.repo.pushed_at }}"
+          pull_request_create_time: "${{ github.event.pull_request.created_at }}"
