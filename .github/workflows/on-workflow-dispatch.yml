@@ -6,7 +6,7 @@ on:
 
 concurrency:
   group: foo
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   default_concurrency_group:
@@ -18,13 +18,14 @@ jobs:
   override_concurrency_group:
     runs-on: ubuntu-latest
     needs: [default_concurrency_group]
+    if: always()
     concurrency:
       group: foo-${{ github.run_number }}
       cancel-in-progress: false
     steps:
       - run: |
-          sleep 300
           echo "$(date) job two"
+          sleep 60
 
   default_concurrency_group_again:
     runs-on: ubuntu-latest
