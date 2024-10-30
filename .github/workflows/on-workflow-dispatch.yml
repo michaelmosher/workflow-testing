@@ -1,0 +1,31 @@
+---
+name: "On workflow dispatch"
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: foo
+  cancel-in-progress: true
+
+jobs:
+  default_concurrency_group:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "$(date) job one"
+
+  override_concurrency_group:
+    runs-on: ubuntu-latest
+    needs: [default_concurrency_group]
+    steps:
+      - run: |
+          sleep 300
+          echo "$(date) job two"
+
+  default_concurrency_group_again:
+    runs-on: ubuntu-latest
+    needs: [override_concurrency_group]
+    steps:
+      - run: |
+          echo "$(date) job three"
