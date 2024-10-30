@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [default_concurrency_group]
     concurrency:
-      group: foo-${{ github.run_number }}
+      group: foo
       cancel-in-progress: false
     steps:
       - run: |
